@@ -52,11 +52,11 @@ public class FilmController {
     }
 
     private void validate(Film film) {
-        if (film.getName().isBlank()) {
+        if (film.getName() == null || film.getName().isBlank()) {
             log.warn("Название фильма не может быть пустым.");
             throw new NullFilmNameException("Название фильма не может быть пустым.");
         }
-        if (film.getDescription().length() > 200) {
+        if (film.getDescription() == null || film.getDescription().length() > 200) {
             log.warn("Длина описания фильма не может быть больше 200 символов.");
             throw new FilmDescriptionTooLongException("Длина описания фильма не может быть больше 200 символов.");
         }
