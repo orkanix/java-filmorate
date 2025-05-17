@@ -1,6 +1,6 @@
 package filmorate.controllers;
 
-import model.User;
+import filmorate.model.User;
 import org.junit.jupiter.api.Test;
 
 import java.net.URI;

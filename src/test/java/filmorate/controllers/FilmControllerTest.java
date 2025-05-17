@@ -1,8 +1,6 @@
 package filmorate.controllers;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import model.Film;
+import filmorate.model.Film;
 import org.junit.jupiter.api.Test;
 
 import java.net.URI;

@@ -3,7 +3,7 @@ package filmorate.controllers;
 import filmorate.exceptions.film.*;
 import filmorate.exceptions.film.FilmNotExist;
 import lombok.extern.slf4j.Slf4j;
-import model.Film;
+import filmorate.model.Film;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
@@ -15,7 +15,7 @@ import java.util.HashMap;
 @RequestMapping("/films")
 public class FilmController {
 
-    HashMap<Long, Film> films = new HashMap<>();
+    private final HashMap<Long, Film> films = new HashMap<>();
 
     @GetMapping
     public Collection<Film> getFilms() {
@@ -41,8 +41,8 @@ public class FilmController {
 
     @PutMapping
     public Film updateFilm(@RequestBody Film film) {
-        validate(film);
-        if (films.containsKey(film.getId())) {
+        if (films.containsValue(film)) {
+            validate(film);
             films.put(film.getId(), film);
             log.info("Успешное обновление фильма.");
             return film;
@@ -52,7 +52,7 @@ public class FilmController {
     }
 
     private void validate(Film film) {
-        if (film.getName().isEmpty()) {
+        if (film.getName().isBlank()) {
             log.warn("Название фильма не может быть пустым.");
             throw new NullFilmNameException("Название фильма не может быть пустым.");
         }
@@ -60,12 +60,12 @@ public class FilmController {
             log.warn("Длина описания фильма не может быть больше 200 символов.");
             throw new FilmDescriptionTooLongException("Длина описания фильма не может быть больше 200 символов.");
         }
-        if (film.getReleaseDate().isBefore(LocalDate.of(1895, 12, 28))) {
-            log.warn("Дата релиза не может быть раньше 28 декабря 1895 года.");
+        if (film.getReleaseDate() == null || film.getReleaseDate().isBefore(LocalDate.of(1895, 12, 28))) {
+            log.warn("Дата релиза обязательна, не может быть раньше 28 декабря 1895 года.");
             throw new InvalidReleaseDateException("Дата релиза не может быть раньше 28 декабря 1895 года.");
         }
-        if (film.getDuration() < 0) {
-            log.warn("Продолжительность фильма должна быть положительным числом.");
+        if (film.getDuration() == null || film.getDuration() < 0) {
+            log.warn("Продолжительность фильма обязательна, должна быть положительным числом.");
             throw new InvalidDurationException("Продолжительность фильма должна быть положительным числом.");
         }
     }

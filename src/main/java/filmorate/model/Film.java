@@ -1,4 +1,4 @@
-package model;
+package filmorate.model;
 
 import lombok.Builder;
 import lombok.Data;
@@ -10,14 +10,11 @@ import java.time.LocalDate;
 @Builder
 @Data
 @EqualsAndHashCode(of = "id")
-public class User {
+public class Film {
 
     private Long id;
-    @NonNull
-    private String email;
-    @NonNull
-    private String login;
     private String name;
-    @NonNull
-    private LocalDate birthday;
+    private String description;
+    private LocalDate releaseDate;
+    private Integer duration;
 }

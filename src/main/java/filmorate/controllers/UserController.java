@@ -2,7 +2,7 @@ package filmorate.controllers;
 
 import filmorate.exceptions.user.*;
 import lombok.extern.slf4j.Slf4j;
-import model.User;
+import filmorate.model.User;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
@@ -14,7 +14,7 @@ import java.util.HashMap;
 @RequestMapping("/users")
 public class UserController {
 
-    HashMap<Long, User> users = new HashMap<>();
+    private final HashMap<Long, User> users = new HashMap<>();
 
     @GetMapping
     public Collection<User> getUsers() {
@@ -40,8 +40,11 @@ public class UserController {
 
     @PutMapping
     public User updateUser(@RequestBody User user) {
-        validate(user);
-        if (users.containsKey(user.getId())) {
+        if (users.containsValue(user)) {
+            validate(user);
+            if (user.getName() == null || user.getName().isBlank()) {
+                user.setName(user.getLogin());
+            }
             users.put(user.getId(), user);
             log.info("Успешное обновление данных пользователя.");
             return user;
@@ -51,16 +54,16 @@ public class UserController {
     }
 
     private void validate(User user) {
-        if (!user.getEmail().contains("@")) {
+        if (user.getEmail().isBlank() || !user.getEmail().contains("@")) {
             log.warn("Электронная почта не может быть пустой и должна содержать символ @.");
             throw new InvalidEmailException("Электронная почта не может быть пустой и должна содержать символ @.");
         }
-        if (user.getLogin().contains(" ")) {
+        if (user.getLogin().isBlank() || user.getLogin().contains(" ")) {
             log.warn("Логин не может быть пустым и содержать пробелы.");
             throw new InvalidLoginException("Логин не может быть пустым и содержать пробелы.");
         }
-        if (user.getBirthday().isAfter(LocalDate.now())) {
-            log.warn("Дата рождения не может быть в будущем.");
+        if (user.getBirthday() == null || user.getBirthday().isAfter(LocalDate.now())) {
+            log.warn("Дата рождения не может быть пустой или в будущем.");
             throw new InvalidBirthdayException("Дата рождения не может быть в будущем");
         }
     }
