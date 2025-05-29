@@ -1,79 +1,56 @@
 package filmorate.controllers;
 
-import filmorate.exceptions.user.*;
-import lombok.extern.slf4j.Slf4j;
+import filmorate.service.UserService;
 import filmorate.model.User;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.LocalDate;
 import java.util.Collection;
-import java.util.HashMap;
+import java.util.List;
 
-@Slf4j
 @RestController
 @RequestMapping("/users")
 public class UserController {
 
-    private final HashMap<Long, User> users = new HashMap<>();
+    private final UserService userService;
+
+    @Autowired
+    public UserController(UserService userService) {
+        this.userService = userService;
+    }
 
     @GetMapping
     public Collection<User> getUsers() {
-        log.info("Успешный вывод пользователей.");
-        return users.values();
+        return userService.getUsers();
+    }
+
+    @GetMapping("/{id}/friends")
+    public List<User> getFriends(@PathVariable Long id) {
+        return userService.getFriends(id);
+    }
+
+    @GetMapping("/{id}/friends/common/{otherId}")
+    public List<User> getMutualFriends(@PathVariable Long id, @PathVariable Long otherId) {
+        return userService.getMutualFriends(id, otherId);
     }
 
     @PostMapping
     public User createUser(@RequestBody User user) {
-        validate(user);
-        User newUser = User.builder()
-                .id(getNextId())
-                .email(user.getEmail())
-                .login(user.getLogin())
-                .name(user.getName() == null ? user.getLogin() : user.getName())
-                .birthday(user.getBirthday())
-                .build();
-
-        log.info("Успешное создание пользователя.");
-        users.put(newUser.getId(), newUser);
-        return newUser;
+        return userService.create(user);
     }
 
     @PutMapping
     public User updateUser(@RequestBody User user) {
-        if (users.containsValue(user)) {
-            validate(user);
-            if (user.getName() == null || user.getName().isBlank()) {
-                user.setName(user.getLogin());
-            }
-            users.put(user.getId(), user);
-            log.info("Успешное обновление данных пользователя.");
-            return user;
-        }
-        log.warn("Пользователь не найден.");
-        throw new UserNotExist("Пользователь не найден.");
+        return userService.update(user);
     }
 
-    private void validate(User user) {
-        if (user.getEmail() == null || user.getEmail().isBlank() || !user.getEmail().contains("@")) {
-            log.warn("Электронная почта не может быть пустой и должна содержать символ @.");
-            throw new InvalidEmailException("Электронная почта не может быть пустой и должна содержать символ @.");
-        }
-        if (user.getLogin() == null || user.getLogin().isBlank() || user.getLogin().contains(" ")) {
-            log.warn("Логин не может быть пустым и содержать пробелы.");
-            throw new InvalidLoginException("Логин не может быть пустым и содержать пробелы.");
-        }
-        if (user.getBirthday() == null || user.getBirthday().isAfter(LocalDate.now())) {
-            log.warn("Дата рождения не может быть пустой или в будущем.");
-            throw new InvalidBirthdayException("Дата рождения не может быть в будущем");
-        }
+    @PutMapping("/{id}/friends/{friendId}")
+    public User addFriend(@PathVariable Long id, @PathVariable Long friendId) {
+        return userService.addFriend(id, friendId);
     }
 
-    private long getNextId() {
-        long currentMaxId = users.keySet()
-                .stream()
-                .mapToLong(id -> id)
-                .max()
-                .orElse(0);
-        return ++currentMaxId;
+    @DeleteMapping("/{id}/friends/{friendId}")
+    public User deleteFriend(@PathVariable Long id, @PathVariable Long friendId) {
+        return userService.deleteFriend(id, friendId);
     }
 }
