@@ -10,81 +10,32 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 @RestControllerAdvice
 public class ErrorHandler {
 
-    @ExceptionHandler
+    @ExceptionHandler({UserNotExist.class, FilmNotExist.class})
     @ResponseStatus(HttpStatus.NOT_FOUND)
-    public ErrorResponse handlerUserNotExist(final UserNotExist e) {
+    public ErrorResponse handleNotFoundExceptions(final RuntimeException e) {
         return new ErrorResponse(e.getMessage());
     }
 
-    @ExceptionHandler
-    @ResponseStatus(HttpStatus.NOT_FOUND)
-    public ErrorResponse handlerFilmNotExist(final FilmNotExist e) {
-        return new ErrorResponse(e.getMessage());
-    }
-
-    @ExceptionHandler
+    @ExceptionHandler({
+            InvalidBirthdayException.class,
+            InvalidEmailException.class,
+            FilmDescriptionTooLongException.class,
+            InvalidDurationException.class,
+            InvalidReleaseDateException.class,
+            NullFilmNameException.class,
+            InvalidLoginException.class,
+            AlreadyContainsInFriends.class,
+            FilmAlreadyLikedByUser.class,
+            FilmNotLikedByUser.class
+    })
     @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public ErrorResponse handlerInvalidBirthdayException(final InvalidBirthdayException e) {
+    public ErrorResponse handleBadRequestExceptions(final RuntimeException e) {
         return new ErrorResponse(e.getMessage());
     }
 
     @ExceptionHandler
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public ErrorResponse handlerInvalidEmailException(final InvalidEmailException e) {
-        return new ErrorResponse(e.getMessage());
-    }
-
-    @ExceptionHandler
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public ErrorResponse handlerFilmDescriptionTooLongException(final FilmDescriptionTooLongException e) {
-        return new ErrorResponse(e.getMessage());
-    }
-
-    @ExceptionHandler
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public ErrorResponse handlerInvalidDurationException(final InvalidDurationException e) {
-        return new ErrorResponse(e.getMessage());
-    }
-
-    @ExceptionHandler
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public ErrorResponse handlerInvalidReleaseDateException(final InvalidReleaseDateException e) {
-        return new ErrorResponse(e.getMessage());
-    }
-
-    @ExceptionHandler
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public ErrorResponse handlerNullFilmNameException(final NullFilmNameException e) {
-        return new ErrorResponse(e.getMessage());
-    }
-
-    @ExceptionHandler
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public ErrorResponse handlerInvalidLoginException(final InvalidLoginException e) {
-        return new ErrorResponse(e.getMessage());
-    }
-
-    @ExceptionHandler
-    @ResponseStatus(HttpStatus.OK)
+    @ResponseStatus(HttpStatus.NO_CONTENT)
     public ErrorResponse handlerNotContainsInFriends(final NotContainsInFriends e) {
-        return new ErrorResponse(e.getMessage());
-    }
-
-    @ExceptionHandler
-    @ResponseStatus(HttpStatus.OK)
-    public ErrorResponse handlerAlreadyContainsInFriends(final AlreadyContainsInFriends e) {
-        return new ErrorResponse(e.getMessage());
-    }
-
-    @ExceptionHandler
-    @ResponseStatus(HttpStatus.OK)
-    public ErrorResponse handlerFilmAlreadyLikedByUser(final FilmAlreadyLikedByUser e) {
-        return new ErrorResponse(e.getMessage());
-    }
-
-    @ExceptionHandler
-    @ResponseStatus(HttpStatus.OK)
-    public ErrorResponse handlerFilmNotLikedByUser(final FilmNotLikedByUser e) {
         return new ErrorResponse(e.getMessage());
     }
 }

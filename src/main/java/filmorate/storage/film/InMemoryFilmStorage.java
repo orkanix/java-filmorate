@@ -1,11 +1,9 @@
 package filmorate.storage.film;
 
-import filmorate.exceptions.film.*;
 import filmorate.model.Film;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
-import java.time.LocalDate;
 import java.util.Collection;
 import java.util.HashMap;
 
@@ -16,29 +14,15 @@ public class InMemoryFilmStorage implements FilmStorage {
     private final HashMap<Long, Film> films = new HashMap<>();
 
     public Film create(Film film) {
-        validate(film);
-        Film newFilm = Film.builder()
-                .id(getNextId())
-                .name(film.getName())
-                .description(film.getDescription())
-                .releaseDate(film.getReleaseDate())
-                .duration(film.getDuration())
-                .build();
-
+        films.put(film.getId(), film);
         log.info("Успешное создание фильма.");
-        films.put(newFilm.getId(), newFilm);
-        return newFilm;
+        return film;
     }
 
     public Film update(Film film) {
-        if (films.containsValue(film)) {
-            validate(film);
-            films.put(film.getId(), film);
-            log.info("Успешное обновление фильма.");
-            return film;
-        }
-        log.warn("Фильим не найден.");
-        throw new FilmNotExist("Фильм не найден.");
+        films.put(film.getId(), film);
+        log.info("Успешное обновление фильма.");
+        return film;
     }
 
     public void deleteLike(Film film, Long id) {
@@ -53,37 +37,6 @@ public class InMemoryFilmStorage implements FilmStorage {
 
     public Film getFilm(Long id) {
         log.info("Успешный вывод фильма.");
-        return films.values().stream()
-                .filter(film -> film.getId().equals(id))
-                .findFirst()
-                .orElseThrow(() -> new FilmNotExist("Фильм не найден!"));
-    }
-
-    private void validate(Film film) {
-        if (film.getName() == null || film.getName().isBlank()) {
-            log.warn("Название фильма не может быть пустым.");
-            throw new NullFilmNameException("Название фильма не может быть пустым.");
-        }
-        if (film.getDescription() == null || film.getDescription().length() > 200) {
-            log.warn("Длина описания фильма не может быть больше 200 символов.");
-            throw new FilmDescriptionTooLongException("Длина описания фильма не может быть больше 200 символов.");
-        }
-        if (film.getReleaseDate() == null || film.getReleaseDate().isBefore(LocalDate.of(1895, 12, 28))) {
-            log.warn("Дата релиза обязательна, не может быть раньше 28 декабря 1895 года.");
-            throw new InvalidReleaseDateException("Дата релиза не может быть раньше 28 декабря 1895 года.");
-        }
-        if (film.getDuration() == null || film.getDuration() < 0) {
-            log.warn("Продолжительность фильма обязательна, должна быть положительным числом.");
-            throw new InvalidDurationException("Продолжительность фильма должна быть положительным числом.");
-        }
-    }
-
-    private long getNextId() {
-        long currentMaxId = films.keySet()
-                .stream()
-                .mapToLong(id -> id)
-                .max()
-                .orElse(0);
-        return ++currentMaxId;
+        return films.get(id);
     }
 }
