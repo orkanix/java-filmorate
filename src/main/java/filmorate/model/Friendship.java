@@ -1,0 +1,13 @@
+package filmorate.model;
+
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
+public class Friendship {
+    private Long friendId;
+    private FriendshipStatus status;
+}

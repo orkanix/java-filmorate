@@ -17,6 +17,9 @@ public class Film {
     private String description;
     private LocalDate releaseDate;
     private Integer duration;
+    private String rating;
+    @Builder.Default
+    private Set<String> genres = new HashSet<>();
     @Builder.Default
     private Set<Long> likes = new HashSet<>();
 }
