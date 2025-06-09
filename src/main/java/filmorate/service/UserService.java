@@ -1,6 +1,8 @@
 package filmorate.service;
 
 import filmorate.exceptions.user.*;
+import filmorate.model.Friendship;
+import filmorate.model.FriendshipStatus;
 import filmorate.model.User;
 import filmorate.storage.user.InMemoryUserStorage;
 import lombok.extern.slf4j.Slf4j;
@@ -9,6 +11,7 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDate;
 import java.util.Collection;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -58,6 +61,7 @@ public class UserService {
         }
 
         return user.getFriends().stream()
+                .map(Friendship::getFriendId)
                 .map(userStorage::getUser)
                 .collect(Collectors.toList());
     }
@@ -72,10 +76,17 @@ public class UserService {
             throw new UserNotExist("Пользователь с id " + secondUserId + " не найден!");
         }
 
-        Set<Long> mutualFriendIds = firstUser.getFriends();
-        mutualFriendIds.retainAll(secondUser.getFriends());
+        Set<Long> firstFriendIds = firstUser.getFriends().stream()
+                .map(Friendship::getFriendId)
+                .collect(Collectors.toSet());
 
-        return mutualFriendIds.stream()
+        Set<Long> secondFriendIds = secondUser.getFriends().stream()
+                .map(Friendship::getFriendId)
+                .collect(Collectors.toSet());
+
+        firstFriendIds.retainAll(secondFriendIds);
+
+        return firstFriendIds.stream()
                 .map(userStorage::getUser)
                 .collect(Collectors.toList());
     }
@@ -90,29 +101,38 @@ public class UserService {
             throw new UserNotExist("Пользователь с id " + friendId + " не найден!");
         }
 
-        if (user.getFriends().contains(friendId)) {
+        boolean alreadyFriends = user.getFriends().stream()
+                .anyMatch(f -> f.getFriendId().equals(friendId));
+
+        if (alreadyFriends) {
             throw new AlreadyContainsInFriends("У пользователя уже есть друг с id: " + friendId);
         }
 
-        user.getFriends().add(friendId);
+        user.getFriends().add(new Friendship(friendId, FriendshipStatus.PENDING));
+        friend.getFriends().add(new Friendship(userId, FriendshipStatus.PENDING));
+
         return user;
     }
+
 
     public User deleteFriend(Long userId, Long friendId) {
         User user = userStorage.getUser(userId);
         if (user == null) {
             throw new UserNotExist("Пользователь с id " + userId + " не найден!");
         }
+
         User friend = userStorage.getUser(friendId);
         if (friend == null) {
             throw new UserNotExist("Пользователь с id " + friendId + " не найден!");
         }
 
-        if (!user.getFriends().contains(friendId)) {
+        boolean removedFromUser = user.getFriends().removeIf(f -> f.getFriendId().equals(friendId));
+        boolean removedFromFriend = friend.getFriends().removeIf(f -> f.getFriendId().equals(userId));
+
+        if (!removedFromUser) {
             throw new NotContainsInFriends("У пользователя нет друга с id: " + friendId);
         }
 
-        userStorage.deleteFriend(user, friendId);
         return friend;
     }
 
