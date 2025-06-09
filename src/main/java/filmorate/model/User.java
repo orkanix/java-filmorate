@@ -1,6 +1,7 @@
 package filmorate.model;
 
 import lombok.*;
+import lombok.experimental.FieldDefaults;
 
 import java.time.LocalDate;
 import java.util.HashSet;
@@ -10,13 +11,14 @@ import java.util.Set;
 @AllArgsConstructor
 @Data
 @EqualsAndHashCode(of = "id")
+@FieldDefaults(level = AccessLevel.PRIVATE)
 public class User {
 
-    private Long id;
-    private String email;
-    private String login;
-    private String name;
-    private LocalDate birthday;
+    Long id;
+    String email;
+    String login;
+    String name;
+    LocalDate birthday;
     @Builder.Default
-    private Set<Long> friends = new HashSet<>();
+    Set<Friendship> friends = new HashSet<>();
 }
