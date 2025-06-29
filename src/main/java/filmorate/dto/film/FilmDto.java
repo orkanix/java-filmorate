@@ -1,29 +1,27 @@
-package filmorate.model;
+package filmorate.dto.film;
 
-import lombok.*;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import filmorate.model.Genre;
+import filmorate.model.Like;
+import filmorate.model.Rating;
+import lombok.AccessLevel;
+import lombok.Data;
 import lombok.experimental.FieldDefaults;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
-@Builder
-@NoArgsConstructor
-@AllArgsConstructor
 @Data
-@EqualsAndHashCode(of = "id")
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class Film {
+public class FilmDto {
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     Long id;
     String name;
     String description;
     LocalDate releaseDate;
     Integer duration;
     Rating mpa;
-    @Builder.Default
     List<Genre> genres = new ArrayList<>();
-    @Builder.Default
     List<Like> likes = new ArrayList<>();
 }

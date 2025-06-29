@@ -1,13 +1,14 @@
-package filmorate.storage.user;
+package filmorate.dao.user;
 
 import filmorate.model.User;
 
 import java.util.Collection;
+import java.util.Optional;
 
 public interface UserStorage {
     User create(User user);
     User update(User user);
-    void deleteFriend(User user, Long id);
+    void deleteFriend(Long userId, Long friendId);
     Collection<User> getUsers();
-    User getUser(Long id);
+    Optional<User> getUser(Long id);
 }

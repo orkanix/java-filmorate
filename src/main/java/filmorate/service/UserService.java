@@ -1,140 +1,114 @@
 package filmorate.service;
 
+import filmorate.dao.user.UserRepository;
+import filmorate.dao.user.mappers.UserMapper;
+import filmorate.dto.user.NewUserRequest;
+import filmorate.dto.user.UpdateUserRequest;
+import filmorate.dto.user.UserDto;
+import filmorate.exceptions.db.InternalServerException;
 import filmorate.exceptions.user.*;
 import filmorate.model.Friendship;
-import filmorate.model.FriendshipStatus;
 import filmorate.model.User;
-import filmorate.storage.user.InMemoryUserStorage;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 @Slf4j
 @Service
 public class UserService {
+    private final UserRepository userRepository;
 
-    private final InMemoryUserStorage userStorage;
-
-    public UserService(InMemoryUserStorage userStorage) {
-        this.userStorage = userStorage;
+    public UserService(UserRepository userRepository) {
+        this.userRepository = userRepository;
     }
 
-    public User create(User user) {
+    public UserDto create(NewUserRequest request) {
+        User user = UserMapper.mapToUser(request);
+
         validate(user);
-        User newUser = User.builder()
-                .id(getNextId())
-                .email(user.getEmail())
-                .login(user.getLogin())
-                .name(user.getName() == null ? user.getLogin() : user.getName())
-                .birthday(user.getBirthday())
-                .build();
-        return userStorage.create(newUser);
+
+        user = userRepository.create(user);
+
+        return UserMapper.mapToUserDto(user);
     }
 
-    public User update(User user) {
-        if (userStorage.getUsers().contains(user)) {
-            validate(user);
-            if (user.getName() == null || user.getName().isBlank()) {
-                user.setName(user.getLogin());
-            }
-            userStorage.update(user);
-            return user;
-        }
-        log.warn("Пользователь не найден.");
-        throw new UserNotExist("Пользователь не найден.");
-    }
+    public UserDto update(UpdateUserRequest request) {
+        User updatedUser = userRepository.getUser(request.getId())
+                .map(user -> UserMapper.updateUserFields(user, request))
+                .orElseThrow(() -> new UserNotExist("Пользователя не существует."));
 
-    public Collection<User> getUsers() {
-        return userStorage.getUsers();
-    }
-
-    public List<User> getFriends(Long id) {
-        User user = userStorage.getUser(id);
-        if (user == null) {
-            throw new UserNotExist("Пользователь с id " + id + " не найден!");
+        validate(updatedUser);
+        if (updatedUser.getName() == null || updatedUser.getName().isBlank()) {
+            updatedUser.setName(updatedUser.getLogin());
         }
 
-        return user.getFriends().stream()
-                .map(Friendship::getFriendId)
-                .map(userStorage::getUser)
+        updatedUser = userRepository.update(updatedUser);
+        return UserMapper.mapToUserDto(updatedUser);
+    }
+
+    public Collection<UserDto> getUsers() {
+        return userRepository.getUsers()
+                .stream()
+                .map(UserMapper::mapToUserDto)
+                .collect(Collectors.toCollection(ArrayList::new));
+    }
+
+    public List<UserDto> getFriends(Long id) {
+        User user = userRepository.getUser(id)
+                .orElseThrow(() -> new UserNotExist("Пользователь с id " + id + " не найден!"));
+
+        return userRepository.getFriends(user).stream()
+                .map(UserMapper::mapToUserDto)
                 .collect(Collectors.toList());
     }
 
-    public List<User> getMutualFriends(Long firstUserId, Long secondUserId) {
-        User firstUser = userStorage.getUser(firstUserId);
-        if (firstUser == null) {
-            throw new UserNotExist("Пользователь с id " + firstUserId + " не найден!");
-        }
-        User secondUser = userStorage.getUser(secondUserId);
-        if (secondUser == null) {
-            throw new UserNotExist("Пользователь с id " + secondUserId + " не найден!");
-        }
+    public List<UserDto> getMutualFriends(Long firstUserId, Long secondUserId) {
+        userRepository.getUser(firstUserId)
+                .orElseThrow(() -> new UserNotExist("Пользователь с id " + firstUserId + " не найден!"));
+        userRepository.getUser(secondUserId)
+                .orElseThrow(() -> new UserNotExist("Пользователь с id " + secondUserId + " не найден!"));
 
-        Set<Long> firstFriendIds = firstUser.getFriends().stream()
-                .map(Friendship::getFriendId)
-                .collect(Collectors.toSet());
-
-        Set<Long> secondFriendIds = secondUser.getFriends().stream()
-                .map(Friendship::getFriendId)
-                .collect(Collectors.toSet());
-
-        firstFriendIds.retainAll(secondFriendIds);
-
-        return firstFriendIds.stream()
-                .map(userStorage::getUser)
+        return userRepository.getCommonFriends(firstUserId, secondUserId).stream()
+                .map(UserMapper::mapToUserDto)
                 .collect(Collectors.toList());
     }
 
-    public User addFriend(Long userId, Long friendId) {
-        User user = userStorage.getUser(userId);
-        if (user == null) {
-            throw new UserNotExist("Пользователь с id " + userId + " не найден!");
-        }
-        User friend = userStorage.getUser(friendId);
-        if (friend == null) {
-            throw new UserNotExist("Пользователь с id " + friendId + " не найден!");
-        }
+    public UserDto addFriend(Long userId, Long friendId) {
+        User user = userRepository.getUser(userId)
+                .orElseThrow(() -> new UserNotExist("Пользователь с id " + userId + " не найден!"));
 
-        boolean alreadyFriends = user.getFriends().stream()
-                .anyMatch(f -> f.getFriendId().equals(friendId));
+        userRepository.getUser(friendId)
+                .orElseThrow(() -> new UserNotExist("Пользователь с id " + friendId + " не найден!"));
 
-        if (alreadyFriends) {
-            throw new AlreadyContainsInFriends("У пользователя уже есть друг с id: " + friendId);
-        }
 
-        user.getFriends().add(new Friendship(friendId, FriendshipStatus.PENDING));
-        friend.getFriends().add(new Friendship(userId, FriendshipStatus.PENDING));
+        user = userRepository.addFriend(user, friendId)
+                .orElseThrow(() -> new UserNotExist("Пользователь с id " + userId + " не найден!"));
 
-        return user;
+        return UserMapper.mapToUserDto(user);
     }
 
 
-    public User deleteFriend(Long userId, Long friendId) {
-        User user = userStorage.getUser(userId);
-        if (user == null) {
-            throw new UserNotExist("Пользователь с id " + userId + " не найден!");
-        }
+    public UserDto deleteFriend(Long userId, Long friendId) {
+        userRepository.getUser(userId)
+                .orElseThrow(() -> new UserNotExist("Пользователь с id " + userId + " не найден!"));
 
-        User friend = userStorage.getUser(friendId);
-        if (friend == null) {
-            throw new UserNotExist("Пользователь с id " + friendId + " не найден!");
-        }
+        userRepository.getUser(friendId)
+                .orElseThrow(() -> new UserNotExist("Пользователь с id " + friendId + " не найден!"));
 
-        boolean removedFromUser = user.getFriends().removeIf(f -> f.getFriendId().equals(friendId));
-        boolean removedFromFriend = friend.getFriends().removeIf(f -> f.getFriendId().equals(userId));
+        userRepository.deleteFriend(userId, friendId);
 
-        if (!removedFromUser) {
-            throw new NotContainsInFriends("У пользователя нет друга с id: " + friendId);
-        }
+        User updatedUser = userRepository.getUser(userId)
+                .orElseThrow(() -> new UserNotExist("Пользователь с id " + userId + " не найден после удаления друга!"));
 
-        return friend;
+        return UserMapper.mapToUserDto(updatedUser);
     }
+
 
     private void validate(User user) {
         if (user.getEmail() == null || user.getEmail().isBlank() || !user.getEmail().contains("@")) {
@@ -151,13 +125,6 @@ public class UserService {
         }
     }
 
-    private long getNextId() {
-        long currentMaxId = userStorage.getUsers()
-                .stream()
-                .mapToLong(User::getId)
-                .max()
-                .orElse(0);
-        return ++currentMaxId;
-    }
-
 }
+
+//сделать DTO, поменять service и controller

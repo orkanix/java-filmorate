@@ -1,15 +1,18 @@
-package filmorate.model;
+package filmorate.dto.user;
 
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 import lombok.experimental.FieldDefaults;
 
-@Data
+import java.time.LocalDate;
+
 @AllArgsConstructor
-@NoArgsConstructor
+@Data
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class Friendship {
-    Long friendId;
+public class NewUserRequest {
+    String email;
+    String login;
+    String name;
+    LocalDate birthday;
 }

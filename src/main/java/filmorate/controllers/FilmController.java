@@ -1,7 +1,9 @@
 package filmorate.controllers;
 
+import filmorate.dto.film.FilmDto;
+import filmorate.dto.film.NewFilmRequest;
+import filmorate.dto.film.UpdateFilmRequest;
 import filmorate.service.FilmService;
-import filmorate.model.Film;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Collection;
@@ -17,32 +19,38 @@ public class FilmController {
     }
 
     @GetMapping
-    public Collection<Film> getFilms() {
+    public Collection<FilmDto> getFilms() {
         return filmService.getFilms();
     }
 
+    @GetMapping("/{filmId}")
+    public FilmDto getFilmById(@PathVariable long filmId) {
+        return filmService.getFilm(filmId);
+    }
+
+
     @GetMapping("/popular")
-    public Collection<Film> getTop10Films(@RequestParam(defaultValue = "10") Integer count) {
+    public Collection<FilmDto> getTop10Films(@RequestParam(defaultValue = "10") Integer count) {
         return filmService.getTop10Films(count);
     }
 
     @PostMapping
-    public Film createFilm(@RequestBody Film film) {
-        return filmService.create(film);
+    public FilmDto createFilm(@RequestBody NewFilmRequest request) {
+        return filmService.create(request);
     }
 
-    @PutMapping
-    public Film updateFilm(@RequestBody Film film) {
-        return filmService.update(film);
+    @PutMapping()
+    public FilmDto updateFilm(@RequestBody UpdateFilmRequest request) {
+        return filmService.update(request);
     }
 
     @PutMapping("/{id}/like/{userId}")
-    public Film addLike(@PathVariable Long id, @PathVariable Long userId) {
+    public FilmDto addLike(@PathVariable Long id, @PathVariable Long userId) {
         return filmService.addLike(id, userId);
     }
 
     @DeleteMapping("/{id}/like/{userId}")
-    public Film deleteLike(@PathVariable Long id, @PathVariable Long userId) {
+    public FilmDto deleteLike(@PathVariable Long id, @PathVariable Long userId) {
         return filmService.deleteLike(id, userId);
     }
 }

@@ -1,108 +1,102 @@
 package filmorate.service;
 
+import filmorate.dao.film.FilmRepository;
+import filmorate.dao.film.mappers.FilmMapper;
+import filmorate.dao.user.UserRepository;
+import filmorate.dto.film.FilmDto;
+import filmorate.dto.film.NewFilmRequest;
+import filmorate.dto.film.UpdateFilmRequest;
+import filmorate.exceptions.db.EntityNotFoundException;
 import filmorate.exceptions.film.*;
-import filmorate.exceptions.user.UserNotExist;
 import filmorate.model.Film;
-import filmorate.model.User;
-import filmorate.storage.film.InMemoryFilmStorage;
-import filmorate.storage.user.InMemoryUserStorage;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Comparator;
-import java.util.HashSet;
 import java.util.stream.Collectors;
 
 @Slf4j
 @Service
 public class FilmService {
 
-    private final InMemoryFilmStorage filmStorage;
-    private final InMemoryUserStorage userStorage;
+    private final FilmRepository filmRepository;
+    private final UserRepository userRepository;
 
-    public FilmService(InMemoryFilmStorage filmStorage, InMemoryUserStorage userStorage) {
-        this.filmStorage = filmStorage;
-        this.userStorage = userStorage;
+    public FilmService(FilmRepository filmRepository, UserRepository userRepository) {
+        this.filmRepository = filmRepository;
+        this.userRepository = userRepository;
     }
 
-    public Film create(Film film) {
+    public FilmDto create(NewFilmRequest request) {
+        Film film = FilmMapper.mapToFilm(request);
         validate(film);
-        Film newFilm = Film.builder()
-                .id(getNextId())
-                .name(film.getName())
-                .description(film.getDescription())
-                .releaseDate(film.getReleaseDate())
-                .duration(film.getDuration())
-                .build();
+        film = filmRepository.create(film);
 
-        return filmStorage.create(newFilm);
+        return FilmMapper.mapToFilmDto(film);
     }
 
-    public Film update(Film film) {
-        if (filmStorage.getFilms().contains(film)) {
-            validate(film);
-            if (film.getLikes() == null) {
-                film.setLikes(filmStorage.getFilm(film.getId()).getLikes());
-            }
-            filmStorage.update(film);
-            return film;
-        }
-        log.warn("Фильим не найден.");
-        throw new FilmNotExist("Фильм не найден.");
+    public FilmDto update(UpdateFilmRequest request) {
+        Film updatedFilm = filmRepository.getFilm(request.getId())
+                .map(film -> FilmMapper.updateFilmFields(film, request))
+                .orElseThrow(() -> new EntityNotFoundException("Фильм с id " + request.getId() + " не найден."));
+        validate(updatedFilm);
+
+        updatedFilm = filmRepository.update(updatedFilm);
+
+        return FilmMapper.mapToFilmDto(updatedFilm);
     }
 
-    public Collection<Film> getFilms() {
-        return filmStorage.getFilms();
+    public Collection<FilmDto> getFilms() {
+        return filmRepository.getFilms()
+                .stream()
+                .map(FilmMapper::mapToFilmDto)
+                .collect(Collectors.toCollection(ArrayList::new));
     }
 
-    public Film addLike(Long filmId, Long userId) {
-        Film film = filmStorage.getFilm(filmId);
-        if (film == null) {
-            throw new FilmNotExist("Фильм не найден!");
-        }
+    public FilmDto getFilm(long filmId) {
+        Film film = filmRepository.getFilm(filmId)
+                .orElseThrow(() -> new EntityNotFoundException("Фильм не найден!"));
+        return FilmMapper.mapToFilmDto(film);
+    }
 
-        User user = userStorage.getUser(userId);
-        if (user == null) {
-            throw new UserNotExist("Пользователь с id " + userId + " не найден!");
-        }
+    public FilmDto addLike(Long filmId, Long userId) {
+        userRepository.getUser(userId)
+                .orElseThrow(() -> new EntityNotFoundException("Пользователь не найден!"));
 
-        if (film.getLikes().contains(userId)) {
+        Film film = filmRepository.getFilm(filmId)
+                .orElseThrow(() -> new EntityNotFoundException("Фильм не найден!"));
+
+        boolean alreadyLiked = film.getLikes().stream()
+                .anyMatch(like -> like.getUserId().equals(userId));
+
+        if (alreadyLiked) {
             log.warn("Нельзя поставить лайк больше одного раза.");
             throw new FilmAlreadyLikedByUser("Пользователь уже ставил лайк этому фильму!");
         }
 
-        film.getLikes().add(userId);
-        return film;
+        Film updatedFilm = filmRepository.addLike(filmId, userId)
+                .orElseThrow(() -> new EntityNotFoundException("Фильм с id " + filmId + " не найден."));
+
+        return FilmMapper.mapToFilmDto(updatedFilm);
     }
 
-    public Film deleteLike(Long filmId, Long userId) {
-        Film film = filmStorage.getFilm(filmId);
-        if (film == null) {
-            throw new FilmNotExist("Фильм не найден!");
-        }
 
-        User user = userStorage.getUser(userId);
-        if (user == null) {
-            throw new UserNotExist("Пользователь с id " + userId + " не найден!");
-        }
+    public FilmDto deleteLike(Long filmId, Long userId) {
+        userRepository.getUser(userId)
+                .orElseThrow(() -> new EntityNotFoundException("Пользователь не найден!"));
 
-        if (!film.getLikes().contains(userId)) {
-            log.warn("Пользователь не оценивал этот фильм.");
-            throw new FilmNotLikedByUser("Пользователь не ставил лайк этому фильму!");
-        }
+        Film film = filmRepository.removeLike(filmId, userId)
+                .orElseThrow(() -> new EntityNotFoundException("Фильм не найден!"));
 
-        filmStorage.deleteLike(film, userId);
-        return film;
+        return FilmMapper.mapToFilmDto(film);
     }
 
-    public Collection<Film> getTop10Films(Integer count) {
-        log.info(filmStorage.getFilms().toString());
-        return filmStorage.getFilms().stream()
-                .sorted(Comparator.comparingInt((Film film) -> film.getLikes().size()).reversed())
-                .limit(count)
-                .collect(Collectors.toList());
+    public Collection<FilmDto> getTop10Films(Integer count) {
+        return filmRepository.getTop10Films(count).stream()
+                .map(FilmMapper::mapToFilmDto)
+                .collect(Collectors.toCollection(ArrayList::new));
     }
 
 
@@ -125,13 +119,6 @@ public class FilmService {
         }
     }
 
-    private long getNextId() {
-        long currentMaxId = filmStorage.getFilms()
-                .stream()
-                .mapToLong(Film::getId)
-                .max()
-                .orElse(0);
-        return ++currentMaxId;
-    }
-
 }
+
+//реализовать сервис для жанров чтобы там обрабатывать ошибки 404 для них

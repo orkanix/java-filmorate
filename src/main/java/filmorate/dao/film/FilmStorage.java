@@ -1,4 +1,4 @@
-package filmorate.storage.film;
+package filmorate.dao.film;
 
 import filmorate.model.Film;
 
