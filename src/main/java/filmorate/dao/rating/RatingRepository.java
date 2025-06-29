@@ -1,8 +1,8 @@
 package filmorate.dao.rating;
 
 import filmorate.dao.BaseRepository;
-import filmorate.exceptions.db.EntityNotFoundException;
 import filmorate.model.Rating;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Repository;
@@ -10,6 +10,7 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 import java.util.Optional;
 
+@Slf4j
 @Repository
 public class RatingRepository extends BaseRepository<Rating> {
     private static final String FIND_BY_ID_QUERY = "SELECT * FROM ratings WHERE rating_id = ?";

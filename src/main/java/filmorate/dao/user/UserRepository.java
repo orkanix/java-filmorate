@@ -2,17 +2,12 @@ package filmorate.dao.user;
 
 import filmorate.dao.BaseRepository;
 import filmorate.dao.friendship.FriendshipRepository;
-import filmorate.model.Friendship;
 import filmorate.model.User;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Repository;
 
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Optional;
-import java.util.stream.Collectors;
+import java.util.*;
 
 @Repository
 public class UserRepository extends BaseRepository<User> implements UserStorage {
@@ -58,7 +53,7 @@ public class UserRepository extends BaseRepository<User> implements UserStorage 
 
         if (userOptional.isPresent()) {
             User user = userOptional.get();
-            List<Friendship> friends = friendshipRepository.getFriendships(user.getId());
+            List<User> friends = friendshipRepository.getFriendships(user.getId());
             user.setFriends(new HashSet<>(friends));
             return Optional.of(user);
         }
@@ -66,10 +61,7 @@ public class UserRepository extends BaseRepository<User> implements UserStorage 
     }
 
     public List<User> getFriends(User user) {
-        return friendshipRepository.getFriendships(user.getId()).stream()
-                .map(friendship -> getUser(friendship.getFriendId()))
-                .flatMap(Optional::stream)
-                .collect(Collectors.toList());
+        return friendshipRepository.getFriendships(user.getId());
     }
 
     public Optional<User> addFriend(User user, Long friendId) {
@@ -78,21 +70,7 @@ public class UserRepository extends BaseRepository<User> implements UserStorage 
     }
 
     public List<User> getCommonFriends(long userId1, long userId2) {
-        List<Long> friendsOfUser1 = friendshipRepository.getFriendIds(userId1);
-        List<Long> friendsOfUser2 = friendshipRepository.getFriendIds(userId2);
-
-        friendsOfUser1.retainAll(friendsOfUser2);
-
-        if (friendsOfUser1.isEmpty()) {
-            return List.of();
-        }
-
-        String sql = String.format("SELECT * FROM users WHERE user_id IN (%s)",
-                friendsOfUser1.stream()
-                        .map(String::valueOf)
-                        .collect(Collectors.joining(",")));
-
-        return findMany(sql);
+        return friendshipRepository.getCommonFriends(userId1, userId2);
     }
 
 }

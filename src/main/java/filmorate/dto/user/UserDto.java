@@ -1,7 +1,7 @@
 package filmorate.dto.user;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import filmorate.model.Friendship;
+import filmorate.model.User;
 import lombok.AccessLevel;
 import lombok.Data;
 import lombok.experimental.FieldDefaults;
@@ -19,5 +19,5 @@ public class UserDto {
     String login;
     String name;
     LocalDate birthday;
-    Set<Friendship> friends = new HashSet<>();
+    Set<User> friends = new HashSet<>();
 }

@@ -12,6 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
+import org.springframework.jdbc.core.JdbcTemplate;
 
 import java.time.LocalDate;
 import java.util.Collection;
@@ -26,6 +27,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 @SpringBootTest(classes = ApplicationStarter.class)
 public class UserRepositoryTest {
     private final UserRepository userRepository;
+    private final JdbcTemplate jdbc;
 
     private User user1;
     private User user2;
@@ -33,6 +35,8 @@ public class UserRepositoryTest {
 
     @BeforeEach
     public void beforeEach() {
+        jdbc.execute("DELETE FROM friendships");
+        jdbc.execute("DELETE FROM users");
         NewUserRequest newUser1 = new NewUserRequest("user1@example.com", "user1", "User One", LocalDate.of(1990, 1, 1));
         NewUserRequest newUser2 = new NewUserRequest("user2@example.com", "user2", "User Two", LocalDate.of(2000, 4, 9));
         NewUserRequest newUser3 = new NewUserRequest("user3@example.com", "user3", "User Three", LocalDate.of(1950, 9, 16));
@@ -43,8 +47,7 @@ public class UserRepositoryTest {
 
     @Test
     public void getUserTest() {
-        Optional<User> userOptional = 
-                userRepository.getUser(user1.getId());
+        Optional<User> userOptional = userRepository.getUser(user1.getId());
 
         assertThat(userOptional)
                 .isPresent()

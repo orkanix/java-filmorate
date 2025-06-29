@@ -3,17 +3,15 @@ package filmorate.service;
 import filmorate.dao.rating.RatingRepository;
 import filmorate.exceptions.db.EntityNotFoundException;
 import filmorate.model.Rating;
+import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 
 @Service
+@AllArgsConstructor
 public class MpaService {
     private final RatingRepository ratingRepository;
-
-    public MpaService(RatingRepository ratingRepository) {
-        this.ratingRepository = ratingRepository;
-    }
 
     public Rating getMpa(long id) {
         return ratingRepository.getRating(id)

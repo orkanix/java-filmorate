@@ -9,6 +9,7 @@ import filmorate.dto.film.UpdateFilmRequest;
 import filmorate.exceptions.db.EntityNotFoundException;
 import filmorate.exceptions.film.*;
 import filmorate.model.Film;
+import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
@@ -19,15 +20,11 @@ import java.util.stream.Collectors;
 
 @Slf4j
 @Service
+@AllArgsConstructor
 public class FilmService {
 
     private final FilmRepository filmRepository;
     private final UserRepository userRepository;
-
-    public FilmService(FilmRepository filmRepository, UserRepository userRepository) {
-        this.filmRepository = filmRepository;
-        this.userRepository = userRepository;
-    }
 
     public FilmDto create(NewFilmRequest request) {
         Film film = FilmMapper.mapToFilm(request);
@@ -43,7 +40,8 @@ public class FilmService {
                 .orElseThrow(() -> new EntityNotFoundException("Фильм с id " + request.getId() + " не найден."));
         validate(updatedFilm);
 
-        updatedFilm = filmRepository.update(updatedFilm);
+        updatedFilm = filmRepository.update(updatedFilm)
+                .orElseThrow(() -> new EntityNotFoundException("Фильм не найден."));
 
         return FilmMapper.mapToFilmDto(updatedFilm);
     }
@@ -94,7 +92,7 @@ public class FilmService {
     }
 
     public Collection<FilmDto> getTop10Films(Integer count) {
-        return filmRepository.getTop10Films(count).stream()
+        return filmRepository.getTopFilms(count).stream()
                 .map(FilmMapper::mapToFilmDto)
                 .collect(Collectors.toCollection(ArrayList::new));
     }
@@ -120,5 +118,3 @@ public class FilmService {
     }
 
 }
-
-//реализовать сервис для жанров чтобы там обрабатывать ошибки 404 для них

@@ -21,5 +21,5 @@ public class User {
     String name;
     LocalDate birthday;
     @Builder.Default
-    Set<Friendship> friends = new HashSet<>();
+    Set<User> friends = new HashSet<>();
 }

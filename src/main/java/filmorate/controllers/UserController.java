@@ -4,7 +4,6 @@ import filmorate.dto.user.NewUserRequest;
 import filmorate.dto.user.UpdateUserRequest;
 import filmorate.dto.user.UserDto;
 import filmorate.service.UserService;
-import filmorate.model.User;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 

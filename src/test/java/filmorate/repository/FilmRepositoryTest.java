@@ -3,7 +3,6 @@ package filmorate.repository;
 import filmorate.ApplicationStarter;
 import filmorate.dao.film.FilmRepository;
 import filmorate.dao.film.mappers.FilmMapper;
-import filmorate.dao.like.LikeRepository;
 import filmorate.dao.user.UserRepository;
 import filmorate.dao.user.mappers.UserMapper;
 import filmorate.dto.film.NewFilmRequest;
@@ -16,6 +15,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
+import org.springframework.jdbc.core.JdbcTemplate;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -31,13 +31,16 @@ import static org.assertj.core.api.Assertions.assertThat;
 @SpringBootTest(classes = ApplicationStarter.class)
 public class FilmRepositoryTest {
     private final FilmRepository filmRepository;
-    private final LikeRepository likeRepository;
     private final UserRepository userRepository;
+    private final JdbcTemplate jdbc;
 
     private Film film1;
 
     @BeforeEach
     public void beforeEach() {
+        jdbc.execute("DELETE FROM likes");
+        jdbc.execute("DELETE FROM films");
+        jdbc.execute("DELETE FROM users");
         NewFilmRequest newFilm1 = new NewFilmRequest("film1", "film description", LocalDate.of(1990, 10, 15), 100, new Rating(1L, "P"), new ArrayList<>(List.of(new Genre(1L, "Комедия"))));
         NewFilmRequest newFilm2 = new NewFilmRequest("film2", "film description", LocalDate.of(2000, 10, 15), 100, new Rating(2L, "PG"), new ArrayList<>(List.of(new Genre(1L, "Комедия"))));
         NewFilmRequest newFilm3 = new NewFilmRequest("film3", "film description", LocalDate.of(1960, 10, 15), 100, new Rating(1L, "P"), new ArrayList<>(List.of(new Genre(2L, "Драма"))));
@@ -64,7 +67,7 @@ public class FilmRepositoryTest {
         assertThat(films)
                 .isNotNull()
                 .isNotEmpty()
-                .hasSize(6)
+                .hasSize(3)
                 .anySatisfy(otherFilm ->
                         assertThat(otherFilm).hasFieldOrPropertyWithValue("name", "film1")
                 )
@@ -74,7 +77,7 @@ public class FilmRepositoryTest {
     }
 
     @Test
-    public void getTop10FilmsTest() {
+    public void getTopFilmsTest() {
         List<Film> films = filmRepository.getFilms();
 
         assertThat(films)
@@ -112,13 +115,13 @@ public class FilmRepositoryTest {
         film1.setDuration(150);
         film1.setReleaseDate(LocalDate.of(2010, 10, 15));
 
-        Film updatedFilm = filmRepository.update(film1);
+        Optional<Film> updatedFilm = filmRepository.update(film1);
 
         assertThat(updatedFilm).isNotNull();
-        assertThat(updatedFilm.getId()).isEqualTo(film1.getId());
-        assertThat(updatedFilm.getName()).isEqualTo("Updated Name");
-        assertThat(updatedFilm.getDuration()).isEqualTo(150);
-        assertThat(updatedFilm.getReleaseDate()).isEqualTo(LocalDate.of(2010, 10, 15));
+        assertThat(updatedFilm.get().getId()).isEqualTo(film1.getId());
+        assertThat(updatedFilm.get().getName()).isEqualTo("Updated Name");
+        assertThat(updatedFilm.get().getDuration()).isEqualTo(150);
+        assertThat(updatedFilm.get().getReleaseDate()).isEqualTo(LocalDate.of(2010, 10, 15));
 
         Optional<Film> userFromDb = filmRepository.getFilm(film1.getId());
         assertThat(userFromDb).isPresent();

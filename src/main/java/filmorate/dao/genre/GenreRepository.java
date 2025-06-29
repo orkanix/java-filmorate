@@ -12,7 +12,7 @@ import java.util.Optional;
 @Repository
 public class GenreRepository extends BaseRepository<Genre> {
     private static final String FIND_BY_ID_QUERY = "SELECT * FROM genres WHERE genre_id = ?;";
-    private static final String FIND_ALL_QUERY = "SELECT * FROM genres;";
+    private static final String FIND_ALL_QUERY = "SELECT * FROM genres ORDER BY genre_id;";
     private static final String FIND_BY_FILM_ID_QUERY = "SELECT g.genre_id, g.name " +
                     "FROM films_genres fg " +
                     "JOIN genres g ON fg.genre_id = g.genre_id " +
@@ -45,6 +45,11 @@ public class GenreRepository extends BaseRepository<Genre> {
         for (Genre genre : genres) {
             update(INSERT_QUERY, filmId, genre.getId());
         }
+    }
+
+    public void update(long filmId, List<Genre> genres) {
+        delete(filmId);
+        create(filmId, genres);
     }
 
     public void delete(long id) {

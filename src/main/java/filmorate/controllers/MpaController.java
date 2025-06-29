@@ -1,6 +1,5 @@
 package filmorate.controllers;
 
-import filmorate.dao.rating.RatingRepository;
 import filmorate.model.Rating;
 import filmorate.service.MpaService;
 import org.springframework.web.bind.annotation.GetMapping;

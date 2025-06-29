@@ -5,10 +5,9 @@ import filmorate.dao.user.mappers.UserMapper;
 import filmorate.dto.user.NewUserRequest;
 import filmorate.dto.user.UpdateUserRequest;
 import filmorate.dto.user.UserDto;
-import filmorate.exceptions.db.InternalServerException;
 import filmorate.exceptions.user.*;
-import filmorate.model.Friendship;
 import filmorate.model.User;
+import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
@@ -16,17 +15,13 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 @Slf4j
 @Service
+@AllArgsConstructor
 public class UserService {
     private final UserRepository userRepository;
-
-    public UserService(UserRepository userRepository) {
-        this.userRepository = userRepository;
-    }
 
     public UserDto create(NewUserRequest request) {
         User user = UserMapper.mapToUser(request);
@@ -126,5 +121,3 @@ public class UserService {
     }
 
 }
-
-//сделать DTO, поменять service и controller

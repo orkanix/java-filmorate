@@ -62,7 +62,7 @@ public class FilmRepository extends BaseRepository<Film> {
                 .toList();
     }
 
-    public List<Film> getTop10Films(Integer limit) {
+    public List<Film> getTopFilms(Integer limit) {
         return jdbc.query(FIND_TOP_10, mapper, limit);
     }
 
@@ -95,9 +95,10 @@ public class FilmRepository extends BaseRepository<Film> {
         return film;
     }
 
-    public Film update(Film film) {
+    public Optional<Film> update(Film film) {
         update(UPDATE_QUERY, film.getName(), film.getDescription(), film.getReleaseDate(), film.getDuration(), film.getMpa().getId(), film.getId());
-        return film;
+        genresRepository.update(film.getId(), film.getGenres());
+        return getFilm(film.getId());
     }
 
     public Optional<Film> addLike(long filmId, long userId) {

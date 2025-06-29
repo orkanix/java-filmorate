@@ -4,7 +4,6 @@ import filmorate.ApplicationStarter;
 import filmorate.dao.rating.RatingRepository;
 import filmorate.model.Rating;
 import lombok.RequiredArgsConstructor;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
@@ -15,7 +14,7 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 
 @AutoConfigureTestDatabase
 @RequiredArgsConstructor(onConstructor_ = @Autowired)
@@ -52,7 +51,6 @@ public class MpaRepositoryTest {
 
     @Test
     public void ratingExistsTest() {
-        boolean exists = ratingRepository.ratingExists(1L);
-        assertTrue(exists);
+        assertFalse(ratingRepository.ratingExists(10L));
     }
 }
