@@ -8,7 +8,7 @@ import java.time.LocalDate;
 
 public abstract class BaseControllerTest {
 
-    public final String baseUrl = "http://localhost:8085";
+    public final String baseUrl = "http://localhost:8080";
     public final HttpClient client = HttpClient.newHttpClient();
     Gson gson = new GsonBuilder()
             .registerTypeAdapter(LocalDate.class, (com.google.gson.JsonDeserializer<LocalDate>)

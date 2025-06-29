@@ -1,5 +1,6 @@
 package filmorate.exceptions;
 
+import filmorate.exceptions.db.EntityNotFoundException;
 import filmorate.exceptions.film.*;
 import filmorate.exceptions.user.*;
 import org.springframework.http.HttpStatus;
@@ -38,4 +39,12 @@ public class ErrorHandler {
     public ErrorResponse handlerNotContainsInFriends(final NotContainsInFriends e) {
         return new ErrorResponse(e.getMessage());
     }
+
+    @ExceptionHandler(EntityNotFoundException.class)
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public ErrorResponse handleEntityNotFound(final EntityNotFoundException e) {
+        return new ErrorResponse(e.getMessage());
+    }
+
+
 }
