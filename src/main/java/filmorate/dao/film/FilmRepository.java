@@ -24,7 +24,7 @@ public class FilmRepository extends BaseRepository<Film> {
     private final LikeRepository likeRepository;
     private static final String FIND_ALL_QUERY = "SELECT * FROM films;";
     private static final String FIND_BY_ID_QUERY = "SELECT * FROM films WHERE film_id = ?;";
-    private static final String FIND_TOP_10 = "SELECT f.film_id, f.name, f.description, f.releaseDate, f.duration, f.rating_id, COUNT(l.user_id) AS likes_count FROM films f LEFT JOIN likes l ON f.film_id = l.film_id GROUP BY f.film_id, f.name, f.description, f.releaseDate, f.duration, f.rating_id ORDER BY likes_count DESC LIMIT ?;";
+    private static final String FIND_TOP_QUERY= "SELECT f.film_id, f.name, f.description, f.releaseDate, f.duration, f.rating_id, COUNT(l.user_id) AS likes_count FROM films f LEFT JOIN likes l ON f.film_id = l.film_id GROUP BY f.film_id, f.name, f.description, f.releaseDate, f.duration, f.rating_id ORDER BY likes_count DESC LIMIT ?;";
     private static final String INSERT_QUERY = "INSERT INTO films (name, description, releaseDate, duration, rating_id) " +
             "VALUES (?, ?, ?, ?, ?);";
     private static final String UPDATE_QUERY = "UPDATE films " +
@@ -63,7 +63,7 @@ public class FilmRepository extends BaseRepository<Film> {
     }
 
     public List<Film> getTopFilms(Integer limit) {
-        return jdbc.query(FIND_TOP_10, mapper, limit);
+        return jdbc.query(FIND_TOP_QUERY, mapper, limit);
     }
 
     public Film create(Film film) {

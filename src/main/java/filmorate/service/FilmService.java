@@ -91,7 +91,7 @@ public class FilmService {
         return FilmMapper.mapToFilmDto(film);
     }
 
-    public Collection<FilmDto> getTop10Films(Integer count) {
+    public Collection<FilmDto> getTopFilms(Integer count) {
         return filmRepository.getTopFilms(count).stream()
                 .map(FilmMapper::mapToFilmDto)
                 .collect(Collectors.toCollection(ArrayList::new));

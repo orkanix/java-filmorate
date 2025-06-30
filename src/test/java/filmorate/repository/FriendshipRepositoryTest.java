@@ -5,7 +5,6 @@ import filmorate.dao.friendship.FriendshipRepository;
 import filmorate.dao.user.UserRepository;
 import filmorate.dao.user.mappers.UserMapper;
 import filmorate.dto.user.NewUserRequest;
-import filmorate.model.Friendship;
 import filmorate.model.User;
 import lombok.RequiredArgsConstructor;
 import org.junit.jupiter.api.BeforeEach;
@@ -14,6 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
+import org.springframework.jdbc.core.JdbcTemplate;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -27,6 +27,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 public class FriendshipRepositoryTest {
     private final UserRepository userRepository;
     private final FriendshipRepository friendshipRepository;
+    private final JdbcTemplate jdbc;
 
     private User user1;
     private User user2;
@@ -34,6 +35,8 @@ public class FriendshipRepositoryTest {
 
     @BeforeEach
     public void beforeEach() {
+        jdbc.execute("DELETE FROM friendships");
+        jdbc.execute("DELETE FROM users");
         NewUserRequest newUser1 = new NewUserRequest("user1@example.com", "user1", "User One", LocalDate.of(1990, 1, 1));
         NewUserRequest newUser2 = new NewUserRequest("user2@example.com", "user2", "User Two", LocalDate.of(2000, 4, 9));
         NewUserRequest newUser3 = new NewUserRequest("user3@example.com", "user3", "User Three", LocalDate.of(1950, 9, 16));
@@ -45,14 +48,14 @@ public class FriendshipRepositoryTest {
 
     @Test
     public void getFriendshipsTest() {
-        List<Friendship> friendships = friendshipRepository.getFriendships(user1.getId());
+        List<User> users = friendshipRepository.getFriendships(user1.getId());
 
-        assertThat(friendships)
+        assertThat(users)
                 .isNotNull()
                 .isNotEmpty()
                 .hasSize(1)
                 .anySatisfy(friendship ->
-                        assertThat(friendship).hasFieldOrPropertyWithValue("friendId", user3.getId())
+                        assertThat(friendship).hasFieldOrPropertyWithValue("id", user3.getId())
                 );
     }
 
@@ -76,10 +79,10 @@ public class FriendshipRepositoryTest {
                 .isNotEmpty()
                 .hasSize(2)
                 .anySatisfy(friendship ->
-                        assertThat(friendship).hasFieldOrPropertyWithValue("friendId", user2.getId())
+                        assertThat(friendship).hasFieldOrPropertyWithValue("id", user2.getId())
                 )
                 .anySatisfy(friendship ->
-                        assertThat(friendship).hasFieldOrPropertyWithValue("friendId", user3.getId())
+                        assertThat(friendship).hasFieldOrPropertyWithValue("id", user3.getId())
                 );
     }
 
@@ -92,10 +95,10 @@ public class FriendshipRepositoryTest {
                 .isNotEmpty()
                 .hasSize(2)
                 .anySatisfy(friendship ->
-                        assertThat(friendship).hasFieldOrPropertyWithValue("friendId", user2.getId())
+                        assertThat(friendship).hasFieldOrPropertyWithValue("id", user2.getId())
                 )
                 .anySatisfy(friendship ->
-                        assertThat(friendship).hasFieldOrPropertyWithValue("friendId", user3.getId())
+                        assertThat(friendship).hasFieldOrPropertyWithValue("id", user3.getId())
                 );
 
         friendshipRepository.removeFriendship(user1.getId(), user2.getId());
@@ -105,7 +108,7 @@ public class FriendshipRepositoryTest {
                 .isNotEmpty()
                 .hasSize(1)
                 .anySatisfy(friendship ->
-                        assertThat(friendship).hasFieldOrPropertyWithValue("friendId", user3.getId())
+                        assertThat(friendship).hasFieldOrPropertyWithValue("id", user3.getId())
                 );
     }
 }
