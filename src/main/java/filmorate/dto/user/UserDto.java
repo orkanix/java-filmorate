@@ -1,25 +1,23 @@
-package filmorate.model;
+package filmorate.dto.user;
 
-import lombok.*;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import filmorate.model.User;
+import lombok.AccessLevel;
+import lombok.Data;
 import lombok.experimental.FieldDefaults;
 
 import java.time.LocalDate;
 import java.util.HashSet;
 import java.util.Set;
 
-@Builder
-@AllArgsConstructor
-@NoArgsConstructor
 @Data
-@EqualsAndHashCode(of = "id")
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class User {
-
+public class UserDto {
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     Long id;
     String email;
     String login;
     String name;
     LocalDate birthday;
-    @Builder.Default
     Set<User> friends = new HashSet<>();
 }
